@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Restrictions - Faculty Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #485461 0%, #28313b 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        /* Consistent Admin Theme Styles */
+        .header { background: rgba(0,0,0, 0.2); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo-section { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 32px; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 12px; }
+        .logo-text h1 { font-size: 24px; font-weight: 700; }
+        .logo-text p { font-size: 14px; opacity: 0.8; }
+        .user-section { display: flex; align-items: center; gap: 20px; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 15px; border-radius: 25px; transition: background 0.3s ease; }
+        .user-profile:hover { background: rgba(255, 255, 255, 0.1); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; background: linear-gradient(45deg, #0984e3, #74b9ff); }
+        .user-info h3 { font-size: 14px; font-weight: 600; }
+        .user-info p { font-size: 12px; opacity: 0.8; }
+        .logout-btn { background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size: 14px; font-weight: 600; }
+        .main-container { display: flex; min-height: calc(100vh - 80px); }
+        .sidebar { width: 280px; background: rgba(0,0,0, 0.2); backdrop-filter: blur(20px); border-right: 1px solid rgba(255, 255, 255, 0.1); padding: 2rem 0; transition: transform 0.3s ease; }
+        .nav-menu { list-style: none; }
+        .nav-link { display: flex; align-items: center; gap: 15px; padding: 15px 30px; color: white; text-decoration: none; transition: all 0.3s ease; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { background: rgba(255, 255, 255, 0.05); border-left-color: #0984e3; }
+        .nav-link i { font-size: 18px; width: 20px; text-align: center; }
+        .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+        /* Content Area */
+        .content { flex: 1; padding: 2rem; }
+        .page-header { background: rgba(0,0,0, 0.2); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .page-title { font-size: 28px; font-weight: 700; }
+        
+        .restrictions-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+        .panel {
+            background: rgba(0,0,0, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        .panel-title { font-size: 22px; font-weight: 600; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem; }
+        .panel-description { font-size: 14px; opacity: 0.8; margin-bottom: 1.5rem; max-width: 800px; }
+        
+        .restriction-item {
+            display: grid; grid-template-columns: 250px 1fr 120px;
+            align-items: center; gap: 1.5rem;
+            padding: 1.25rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .restriction-item:last-child { border-bottom: none; }
+        .item-label { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 0.75rem; }
+        .item-label i { width: 20px; text-align: center; opacity: 0.8; }
+        
+        .form-controls { display: flex; flex-wrap: wrap; gap: 1rem; }
+        .form-group { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; min-width: 200px; }
+        .form-label { font-size: 12px; opacity: 0.7; }
+        .form-input, .form-select {
+             width: 100%; padding: 10px; border-radius: 8px; 
+             background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); 
+             color: white; font-size: 14px;
+        }
+        .form-select option { background: #28313b; }
+        
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary { background: #0984e3; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #74b9ff; }
+        .btn-save-container { text-align: right; }
+
+        @media (max-width: 992px) {
+            .restriction-item { grid-template-columns: 1fr; gap: 1rem; }
+            .btn-save-container { text-align: left; margin-top: 1rem; }
+        }
+        @media (max-width: 768px) {
+            .content { padding: 1rem; }
+            .mobile-menu-btn { display: block; }
+            .sidebar { transform: translateX(-100%); position: fixed; height: 100%; z-index: 90; }
+            .sidebar.active { transform: translateX(0); }
+            .user-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section"><button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button><div class="logo-icon"><i class="fas fa-university"></i></div><div class="logo-text"><h1>Faculty Management</h1><p>Admin Panel</p></div></div>
+        <div class="user-section"><div class="user-profile"><div class="user-avatar" id="userAvatar">AD</div><div class="user-info"><h3 id="userName">Admin Name</h3><p id="userRole">Administrator</p></div></div><button class="logout-btn" onclick="logout()">Logout</button></div>
+    </div>
+
+    <div class="main-container">
+        <nav class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="pending-requests.html" class="nav-link"><i class="fas fa-inbox"></i><span>Pending Requests</span></a></li>
+                <li class="nav-item"><a href="user-management.html" class="nav-link"><i class="fas fa-users-cog"></i><span>User Management</span></a></li>
+                <li class="nav-item"><a href="resource-tracking.html" class="nav-link"><i class="fas fa-cogs"></i><span>Resource Management</span></a></li>
+                <li class="nav-item"><a href="maintenance.html" class="nav-link"><i class="fas fa-tools"></i><span>Maintenance</span></a></li>
+                <li class="nav-item"><a href="analytics.html" class="nav-link"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-user-shield"></i><span>Restrictions</span></a></li>
+                <li class="nav-item"><a href="system-settings.html" class="nav-link"><i class="fas fa-cog"></i><span>System Settings</span></a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="page-header">
+                <h1 class="page-title">Usage Restrictions & Rules</h1>
+                <p style="opacity: 0.8; max-width: 800px;">Define global and specific rules for resource booking and user access. More specific rules (like for an individual user or resource) will override general role-based rules.</p>
+            </div>
+
+            <div class="restrictions-grid">
+                <!-- Role-Based Restrictions -->
+                <div class="panel">
+                    <h2 class="panel-title">Role-Based Restrictions</h2>
+                    <p class="panel-description">Set general booking limits for different user roles. These act as default rules for any user in that role.</p>
+                    <div class="restriction-item">
+                        <div class="item-label"><i class="fas fa-user-graduate"></i> Students</div>
+                        <div class="form-controls">
+                            <div class="form-group">
+                                <label class="form-label">Max Active Bookings</label>
+                                <input type="number" class="form-input" value="3" title="The maximum number of concurrent active or pending bookings a student can have.">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Booking Lead Time</label>
+                                <input type="number" class="form-input" value="7" title="How many days in advance a student can book a resource.">
+                            </div>
+                        </div>
+                        <div class="btn-save-container"><button class="btn btn-primary" onclick="saveRestriction('student')">Save</button></div>
+                    </div>
+                    <div class="restriction-item">
+                        <div class="item-label"><i class="fas fa-chalkboard-teacher"></i> Faculty</div>
+                         <div class="form-controls">
+                            <div class="form-group">
+                                <label class="form-label">Max Active Bookings</label>
+                                <input type="number" class="form-input" value="10" title="The maximum number of concurrent active or pending bookings a faculty member can have.">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Booking Lead Time</label>
+                                <input type="number" class="form-input" value="30" title="How many days in advance a faculty member can book a resource.">
+                            </div>
+                        </div>
+                        <div class="btn-save-container"><button class="btn btn-primary" onclick="saveRestriction('faculty')">Save</button></div>
+                    </div>
+                    <div class="restriction-item">
+                        <div class="item-label"><i class="fas fa-user-tie"></i> Staff</div>
+                         <div class="form-controls">
+                           <div class="form-group">
+                                <label class="form-label">Max Active Bookings</label>
+                                <input type="number" class="form-input" value="5" title="The maximum number of concurrent active or pending bookings a staff member can have.">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Max Booking Lead Time</label>
+                                <input type="number" class="form-input" value="14" title="How many days in advance a staff member can book a resource.">
+                            </div>
+                        </div>
+                        <div class="btn-save-container"><button class="btn btn-primary" onclick="saveRestriction('staff')">Save</button></div>
+                    </div>
+                </div>
+                
+                <!-- Resource-Specific Restrictions -->
+                <div class="panel">
+                    <h2 class="panel-title">Resource-Specific Restrictions</h2>
+                    <p class="panel-description">Override default role-based rules for specific high-demand or sensitive resources.</p>
+                     <div class="restriction-item">
+                        <div class="item-label"><i class="fas fa-server"></i> High-Performance Server</div>
+                        <div class="form-controls">
+                           <div class="form-group">
+                               <label class="form-label">Allowed Roles</label>
+                               <select class="form-select" title="Only users of these roles can book this resource.">
+                                    <option>Faculty Only</option>
+                                    <option>Faculty & Staff</option>
+                                    <option>All Roles</option>
+                               </select>
+                           </div>
+                           <div class="form-group">
+                               <label class="form-label">Max Booking Duration (Days)</label>
+                               <input type="number" class="form-input" value="5" title="The maximum number of consecutive days this resource can be booked.">
+                           </div>
+                        </div>
+                        <div class="btn-save-container"><button class="btn btn-primary" onclick="saveRestriction('server')">Save</button></div>
+                    </div>
+                    <div class="restriction-item">
+                        <div class="item-label"><i class="fas fa-cube"></i> 3D Printer</div>
+                        <div class="form-controls">
+                            <div class="form-group">
+                                <label class="form-label">Allowed Roles</label>
+                                <select class="form-select" title="Only users of these roles can book this resource.">
+                                    <option>Faculty Only</option>
+                                    <option>Faculty & Staff</option>
+                                    <option selected>All Roles</option>
+                               </select>
+                           </div>
+                           <div class="form-group">
+                                <label class="form-label">Max Booking Duration (Hours)</label>
+                                <input type="number" class="form-input" value="8" title="The maximum number of consecutive hours this resource can be booked.">
+                           </div>
+                        </div>
+                        <div class="btn-save-container"><button class="btn btn-primary" onclick="saveRestriction('printer')">Save</button></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function initializeMobileMenu() { /* Stub */ }
+        
+        function saveRestriction(type) {
+            console.log(`Saving restriction for type: ${type}`);
+            const button = event.target;
+            const originalText = button.textContent;
+            
+            button.innerHTML = '<i class="fas fa-check"></i> Saving...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-check"></i> Saved!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 2000);
+            }, 1000);
+        }
+
+        function logout() { /* Stub */ }
+    </script>
+</body>
+</html>

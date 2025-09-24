@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Faculty Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #485461 0%, #28313b 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        /* Consistent Header and base styles, adapted for admin theme */
+        .header { background: rgba(0,0,0, 0.2); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo-section { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 32px; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 12px; }
+        .logo-text h1 { font-size: 24px; font-weight: 700; }
+        .logo-text p { font-size: 14px; opacity: 0.8; }
+        .user-section { display: flex; align-items: center; gap: 20px; }
+        .user-avatar { background: linear-gradient(45deg, #0984e3, #74b9ff); }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 15px; border-radius: 25px; transition: background 0.3s ease; }
+        .user-profile:hover { background: rgba(255, 255, 255, 0.1); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+        .user-info h3 { font-size: 14px; font-weight: 600; }
+        .user-info p { font-size: 12px; opacity: 0.8; }
+        .logout-btn { background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size: 14px; font-weight: 600; }
+
+        .main-container { display: flex; min-height: calc(100vh - 80px); }
+        .sidebar {
+            width: 280px;
+            background: rgba(0,0,0, 0.2);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem 0;
+            transition: transform 0.3s ease;
+        }
+        .nav-menu { list-style: none; }
+        .nav-link { display: flex; align-items: center; gap: 15px; padding: 15px 30px; color: white; text-decoration: none; transition: all 0.3s ease; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { background: rgba(255, 255, 255, 0.05); border-left-color: #0984e3; }
+        .nav-link i { font-size: 18px; width: 20px; text-align: center; }
+        .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+        /* Content Area */
+        .content { flex: 1; padding: 2rem; }
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 2rem;
+        }
+        
+        .welcome-section {
+            grid-column: span 12;
+            background: rgba(0,0,0, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .welcome-title { font-size: 28px; font-weight: 700; }
+        
+        /* Stat Cards */
+        .stat-card {
+            grid-column: span 3;
+            background: rgba(0,0,0, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-5px); background: rgba(0,0,0, 0.3); }
+        .stat-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .stat-icon { font-size: 24px; width: 50px; height: 50px; background: rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        .stat-title { font-size: 14px; opacity: 0.8; }
+        .stat-number { font-size: 32px; font-weight: 700; }
+        .stat-icon.pending { color: #fdcb6e; }
+        .stat-icon.active { color: #2ed573; }
+        .stat-icon.users { color: #74b9ff; }
+        .stat-icon.resources { color: #a29bfe; }
+        
+        /* Main Panel Sections */
+        .main-panel {
+            grid-column: span 8;
+            background: rgba(0,0,0, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+        
+        .side-panel {
+            grid-column: span 4;
+            background: rgba(0,0,0, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .panel-title { font-size: 22px; font-weight: 600; margin-bottom: 1.5rem; }
+        
+        /* Pending Requests List */
+        .request-list { display: flex; flex-direction: column; gap: 1rem; }
+        .request-item { display: flex; align-items: center; gap: 1rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 12px; }
+        .request-info { flex: 1; }
+        .request-title { font-weight: 600; }
+        .request-user { font-size: 14px; opacity: 0.7; }
+        .request-actions .btn { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+        .btn-success { background: rgba(46, 213, 115, 0.2); color: #2ed573; border: none; cursor: pointer; }
+        .btn-danger { background: rgba(255, 71, 87, 0.2); color: #ff4757; border: none; cursor: pointer; }
+
+        /* Quick Actions */
+        .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .action-btn {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 1rem;
+            text-align: center; color: white; text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .action-btn:hover { background: rgba(255,255,255,0.15); transform: translateY(-3px); }
+        .action-btn i { font-size: 24px; margin-bottom: 0.5rem; display: block; }
+        
+        @media (max-width: 1200px) {
+            .stat-card { grid-column: span 6; }
+            .main-panel, .side-panel { grid-column: span 12; }
+        }
+        @media (max-width: 768px) {
+            .content { padding: 1rem; }
+            .content-grid { gap: 1rem; }
+            .stat-card { grid-column: span 12; }
+            .mobile-menu-btn { display: block; }
+            .sidebar { transform: translateX(-100%); position: fixed; height: 100%; z-index: 90; }
+            .sidebar.active { transform: translateX(0); }
+            .user-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section"><button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button><div class="logo-icon"><i class="fas fa-university"></i></div><div class="logo-text"><h1>Faculty Management</h1><p>Admin Panel</p></div></div>
+        <div class="user-section"><div class="user-profile"><div class="user-avatar" id="userAvatar">AD</div><div class="user-info"><h3 id="userName">Admin Name</h3><p id="userRole">Administrator</p></div></div><button class="logout-btn" onclick="logout()">Logout</button></div>
+    </div>
+
+    <div class="main-container">
+        <nav class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="pending-requests.html" class="nav-link"><i class="fas fa-inbox"></i><span>Pending Requests</span></a></li>
+                <li class="nav-item"><a href="user-management.html" class="nav-link"><i class="fas fa-users-cog"></i><span>User Management</span></a></li>
+                <li class="nav-item"><a href="resource-tracking.html" class="nav-link"><i class="fas fa-cogs"></i><span>Resource Management</span></a></li>
+                <li class="nav-item"><a href="maintenance.html" class="nav-link"><i class="fas fa-tools"></i><span>Maintenance</span></a></li>
+                <li class="nav-item"><a href="analytics.html" class="nav-link"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
+                <li class="nav-item"><a href="set-restrictions.html" class="nav-link"><i class="fas fa-user-shield"></i><span>Restrictions</span></a></li>
+                <li class="nav-item"><a href="system-settings.html" class="nav-link"><i class="fas fa-cog"></i><span>System Settings</span></a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="content-grid">
+                <div class="welcome-section">
+                    <h1 class="welcome-title">Welcome back, Admin!</h1>
+                    <p>Here is a summary of the system's current status.</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon pending"><i class="fas fa-inbox"></i></div>
+                        <span class="stat-title">Pending Requests</span>
+                    </div>
+                    <p class="stat-number" id="pending-requests-count">8</p>
+                </div>
+                <div class="stat-card">
+                     <div class="stat-header">
+                        <div class="stat-icon active"><i class="fas fa-calendar-check"></i></div>
+                        <span class="stat-title">Active Bookings</span>
+                    </div>
+                    <p class="stat-number" id="active-bookings-count">32</p>
+                </div>
+                <div class="stat-card">
+                     <div class="stat-header">
+                        <div class="stat-icon users"><i class="fas fa-users"></i></div>
+                        <span class="stat-title">Total Users</span>
+                    </div>
+                    <p class="stat-number" id="total-users-count">1,204</p>
+                </div>
+                <div class="stat-card">
+                     <div class="stat-header">
+                        <div class="stat-icon resources"><i class="fas fa-layer-group"></i></div>
+                        <span class="stat-title">Total Resources</span>
+                    </div>
+                    <p class="stat-number" id="total-resources-count">78</p>
+                </div>
+                
+                <div class="main-panel">
+                    <h2 class="panel-title">Recent Pending Requests</h2>
+                    <div class="request-list" id="request-list-container">
+                        <!-- Requests will be populated by JS -->
+                    </div>
+                     <a href="pending-requests.html" style="display: block; text-align: right; margin-top: 1.5rem; color: #74b9ff;">View all requests →</a>
+                </div>
+                
+                <div class="side-panel">
+                    <h2 class="panel-title">Quick Actions</h2>
+                    <div class="actions-grid">
+                        <a href="pending-requests.html" class="action-btn"><i class="fas fa-inbox"></i> Manage Requests</a>
+                        <a href="#" class="action-btn"><i class="fas fa-plus-circle"></i> Add Resource</a>
+                        <a href="user-management.html" class="action-btn"><i class="fas fa-user-plus"></i> Add User</a>
+                        <a href="analytics.html" class="action-btn"><i class="fas fa-chart-line"></i> View Reports</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DATA ---
+        let currentAdmin = {};
+        const sampleRequests = [
+            { id: 101, user: 'John Student', resource: '3D Printer', time: '2 hours ago' },
+            { id: 102, user: 'Jane Doe', resource: 'High-Performance Server', time: '5 hours ago' },
+            { id: 103, user: 'Peter Jones', resource: 'Auditorium', time: '1 day ago' },
+            { id: 104, user: 'Mary Smith', resource: 'Robotic Arm Kit', time: '2 days ago' },
+        ];
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAdminData();
+            initializeMobileMenu();
+            renderPendingRequests();
+        });
+
+        function loadAdminData() {
+            currentAdmin = { name: 'Admin', role: 'Administrator' };
+            document.getElementById('userName').textContent = currentAdmin.name;
+            document.getElementById('userRole').textContent = currentAdmin.role;
+            const initials = currentAdmin.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('userAvatar').textContent = initials;
+        }
+
+        function initializeMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('active'));
+        }
+
+        // --- DYNAMIC CONTENT RENDERING ---
+        function renderPendingRequests() {
+            const container = document.getElementById('request-list-container');
+            container.innerHTML = '';
+            
+            if(sampleRequests.length === 0) {
+                 container.innerHTML = `<p style="opacity: 0.7;">No pending requests at the moment.</p>`;
+                 return;
+            }
+
+            sampleRequests.slice(0, 4).forEach(req => { // Show max 4 on dashboard
+                const item = document.createElement('div');
+                item.className = 'request-item';
+                item.id = `request-${req.id}`;
+                item.innerHTML = `
+                    <div class="request-info">
+                        <p class="request-title">${req.resource}</p>
+                        <p class="request-user">by ${req.user} · ${req.time}</p>
+                    </div>
+                    <div class="request-actions">
+                        <button class="btn btn-success" onclick="handleRequest(${req.id}, 'approved')">Approve</button>
+                        <button class="btn btn-danger" onclick="handleRequest(${req.id}, 'denied')">Deny</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- ACTION HANDLERS ---
+        function handleRequest(id, action) {
+            const item = document.getElementById(`request-${id}`);
+            const resource = item.querySelector('.request-title').textContent;
+            
+            if (confirm(`Are you sure you want to ${action.slice(0,-1)} the request for ${resource}?`)) {
+                // In a real app, send this to a server. Here, we just remove it from the UI.
+                item.style.transition = 'all 0.5s ease';
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(50px)';
+                
+                setTimeout(() => {
+                    item.remove();
+                    // Update the main data array
+                    const index = sampleRequests.findIndex(r => r.id === id);
+                    if (index > -1) sampleRequests.splice(index, 1);
+                    // Update count
+                    document.getElementById('pending-requests-count').textContent = sampleRequests.length;
+                    // Check if list is now empty
+                    if(document.getElementById('request-list-container').children.length === 0){
+                        document.getElementById('request-list-container').innerHTML = `<p style="opacity: 0.7;">No pending requests at the moment.</p>`;
+                    }
+                }, 500);
+                
+                console.log(`Request ID ${id} was ${action}.`);
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to log out from the Admin Panel?')) {
+                alert('Logging out...');
+                // Redirect to login page
+                // window.location.href = '../../index.html';
+            }
+        }
+    </script>
+</body>
+</html>

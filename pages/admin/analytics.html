@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics & Reports - Faculty Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Include Chart.js library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #485461 0%, #28313b 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        /* Consistent Admin Theme Styles */
+        .header { background: rgba(0,0,0, 0.2); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo-section { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 32px; background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 12px; }
+        .logo-text h1 { font-size: 24px; font-weight: 700; }
+        .logo-text p { font-size: 14px; opacity: 0.8; }
+        .user-section { display: flex; align-items: center; gap: 20px; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 15px; border-radius: 25px; transition: background 0.3s ease; }
+        .user-profile:hover { background: rgba(255, 255, 255, 0.1); }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; background: linear-gradient(45deg, #0984e3, #74b9ff); }
+        .user-info h3 { font-size: 14px; font-weight: 600; }
+        .user-info p { font-size: 12px; opacity: 0.8; }
+        .logout-btn { background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size: 14px; font-weight: 600; }
+        .main-container { display: flex; min-height: calc(100vh - 80px); }
+        .sidebar { width: 280px; background: rgba(0,0,0, 0.2); backdrop-filter: blur(20px); border-right: 1px solid rgba(255, 255, 255, 0.1); padding: 2rem 0; transition: transform 0.3s ease; }
+        .nav-menu { list-style: none; }
+        .nav-link { display: flex; align-items: center; gap: 15px; padding: 15px 30px; color: white; text-decoration: none; transition: all 0.3s ease; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { background: rgba(255, 255, 255, 0.05); border-left-color: #0984e3; }
+        .nav-link i { font-size: 18px; width: 20px; text-align: center; }
+        .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+        /* Content Area */
+        .content { flex: 1; padding: 2rem; }
+        .page-header { background: rgba(0,0,0, 0.2); backdrop-filter: blur(10px); border-radius: 20px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center; }
+        .page-title { font-size: 28px; font-weight: 700; }
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary { background: #0984e3; color: white; }
+
+        .analytics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+        
+        .kpi-card {
+            background: rgba(0,0,0, 0.2); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .kpi-title { font-size: 14px; opacity: 0.8; margin-bottom: 0.5rem; }
+        .kpi-value { font-size: 28px; font-weight: 700; }
+        .kpi-change { font-size: 14px; margin-left: 10px; }
+        .kpi-change.positive { color: #2ed573; }
+        .kpi-change.negative { color: #ff4757; }
+        
+        .chart-card {
+            grid-column: span 2;
+            background: rgba(0,0,0, 0.2); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .chart-title { font-size: 18px; font-weight: 600; margin-bottom: 1rem; }
+        
+        .table-card {
+            grid-column: span 4;
+            background: rgba(0,0,0, 0.2); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th, .data-table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .data-table th { font-size: 14px; text-transform: uppercase; opacity: 0.7; }
+        .data-table tbody tr:hover { background: rgba(255, 255, 255, 0.05); }
+
+        @media (max-width: 1200px) {
+            .analytics-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-card { grid-column: span 2; }
+            .table-card { grid-column: span 2; }
+        }
+        @media (max-width: 768px) {
+            .content { padding: 1rem; }
+            .analytics-grid { grid-template-columns: 1fr; }
+            .chart-card, .table-card { grid-column: span 1; }
+            .mobile-menu-btn { display: block; }
+            .sidebar { transform: translateX(-100%); position: fixed; height: 100%; z-index: 90; }
+            .sidebar.active { transform: translateX(0); }
+            .user-info { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section"><button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button><div class="logo-icon"><i class="fas fa-university"></i></div><div class="logo-text"><h1>Faculty Management</h1><p>Admin Panel</p></div></div>
+        <div class="user-section"><div class="user-profile"><div class="user-avatar" id="userAvatar">AD</div><div class="user-info"><h3 id="userName">Admin Name</h3><p id="userRole">Administrator</p></div></div><button class="logout-btn" onclick="logout()">Logout</button></div>
+    </div>
+
+    <div class="main-container">
+        <nav class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="admin-dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="pending-requests.html" class="nav-link"><i class="fas fa-inbox"></i><span>Pending Requests</span></a></li>
+                <li class="nav-item"><a href="user-management.html" class="nav-link"><i class="fas fa-users-cog"></i><span>User Management</span></a></li>
+                <li class="nav-item"><a href="resource-tracking.html" class="nav-link"><i class="fas fa-cogs"></i><span>Resource Management</span></a></li>
+                <li class="nav-item"><a href="maintenance.html" class="nav-link"><i class="fas fa-tools"></i><span>Maintenance</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-chart-line"></i><span>Analytics</span></a></li>
+                <li class="nav-item"><a href="set-restrictions.html" class="nav-link"><i class="fas fa-user-shield"></i><span>Restrictions</span></a></li>
+                <li class="nav-item"><a href="system-settings.html" class="nav-link"><i class="fas fa-cog"></i><span>System Settings</span></a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="page-header">
+                <h1 class="page-title">Analytics & Reports</h1>
+                <button class="btn btn-primary" onclick="exportReport()"><i class="fas fa-download" style="margin-right: 8px;"></i> Export Report</button>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="kpi-card">
+                    <p class="kpi-title">Total Bookings (Last 30 Days)</p>
+                    <h2 class="kpi-value">452 <span class="kpi-change positive"><i class="fas fa-arrow-up"></i> 12%</span></h2>
+                </div>
+                <div class="kpi-card">
+                    <p class="kpi-title">Avg. Booking Duration</p>
+                    <h2 class="kpi-value">2.5 <span style="font-size: 18px; opacity: 0.7;">hours</span></h2>
+                </div>
+                <div class="kpi-card">
+                    <p class="kpi-title">Peak Booking Day</p>
+                    <h2 class="kpi-value">Wednesday</h2>
+                </div>
+                <div class="kpi-card">
+                    <p class="kpi-title">System Uptime</p>
+                    <h2 class="kpi-value">99.98%</h2>
+                </div>
+                
+                <div class="chart-card">
+                    <h3 class="chart-title">Bookings Over Time</h3>
+                    <canvas id="bookingsChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Resource Type Usage</h3>
+                    <canvas id="resourceTypeChart"></canvas>
+                </div>
+                
+                <div class="table-card">
+                     <h3 class="chart-title">Most Popular Resources</h3>
+                     <table class="data-table">
+                         <thead><tr><th>Resource Name</th><th>Type</th><th>Total Bookings</th><th>Total Hours</th></tr></thead>
+                         <tbody id="popularResourcesTable"></tbody>
+                     </table>
+                </div>
+                <div class="table-card">
+                     <h3 class="chart-title">Top Users</h3>
+                     <table class="data-table">
+                         <thead><tr><th>User Name</th><th>Department</th><th>Total Bookings</th></tr></thead>
+                         <tbody id="topUsersTable"></tbody>
+                     </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DATA ---
+        const popularResourcesData = [
+            { name: '3D Printer', type: 'Equipment', bookings: 78, hours: 195 },
+            { name: 'Meeting Room A', type: 'Room', bookings: 65, hours: 97.5 },
+            { name: 'Lecture Hall 1', type: 'Room', bookings: 52, hours: 104 },
+            { name: 'High-Performance Server', type: 'Equipment', bookings: 41, hours: 410 },
+        ];
+        const topUsersData = [
+            { name: 'John Student', dept: 'Computer Science', bookings: 25 },
+            { name: 'Dr. Jane Doe', dept: 'Engineering', bookings: 18 },
+            { name: 'Robotics Club', dept: 'Student Org', bookings: 15 },
+        ];
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeMobileMenu();
+            renderCharts();
+            renderTables();
+        });
+
+        function initializeMobileMenu() { /* Stub */ }
+
+        function renderTables() {
+            const popularResTbody = document.getElementById('popularResourcesTable');
+            popularResourcesData.forEach(res => {
+                popularResTbody.innerHTML += `<tr><td>${res.name}</td><td>${res.type}</td><td>${res.bookings}</td><td>${res.hours}</td></tr>`;
+            });
+
+            const topUsersTbody = document.getElementById('topUsersTable');
+            topUsersData.forEach(user => {
+                topUsersTbody.innerHTML += `<tr><td>${user.name}</td><td>${user.dept}</td><td>${user.bookings}</td></tr>`;
+            });
+        }
+        
+        // --- CHART.JS RENDERING ---
+        function renderCharts() {
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.7)';
+            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.2)';
+
+            // Bookings Over Time Chart (Line)
+            const bookingsCtx = document.getElementById('bookingsChart').getContext('2d');
+            new Chart(bookingsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'This Week'],
+                    datasets: [{
+                        label: 'Total Bookings',
+                        data: [102, 120, 115, 135, 98],
+                        backgroundColor: 'rgba(9, 132, 227, 0.2)',
+                        borderColor: '#0984e3',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Resource Type Chart (Doughnut)
+            const resourceTypeCtx = document.getElementById('resourceTypeChart').getContext('2d');
+            new Chart(resourceTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Rooms', 'Equipment', 'Labs'],
+                    datasets: [{
+                        label: 'Usage by Type',
+                        data: [219, 120, 113],
+                        backgroundColor: ['#0984e3', '#74b9ff', '#a29bfe'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+        
+        // --- EXPORT FUNCTIONALITY ---
+        function exportReport() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            
+            // Section 1: Popular Resources
+            csvContent += "Most Popular Resources\r\n";
+            csvContent += "Resource Name,Type,Total Bookings,Total Hours\r\n";
+            popularResourcesData.forEach(row => {
+                csvContent += `${row.name},${row.type},${row.bookings},${row.hours}\r\n`;
+            });
+            
+            csvContent += "\r\n"; // Add a blank line for separation
+
+            // Section 2: Top Users
+            csvContent += "Top Users\r\n";
+            csvContent += "User Name,Department,Total Bookings\r\n";
+            topUsersData.forEach(row => {
+                csvContent += `${row.name},${row.dept},${row.bookings}\r\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `analytics_report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link); // Required for Firefox
+
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('Report download initiated!');
+        }
+
+        function logout() { /* Stub */ }
+    </script>
+</body>
+</html>

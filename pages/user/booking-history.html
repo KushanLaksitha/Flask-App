@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Bookings - Faculty Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+
+        /* Consistent Header, Sidebar, and other base styles */
+        .header { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo-section { display: flex; align-items: center; gap: 15px; }
+        .logo-icon { font-size: 32px; background: rgba(255, 255, 255, 0.2); padding: 10px; border-radius: 12px; }
+        .logo-text h1 { font-size: 24px; font-weight: 700; }
+        .logo-text p { font-size: 14px; opacity: 0.8; }
+        .user-section { display: flex; align-items: center; gap: 20px; }
+        .notifications { position: relative; cursor: pointer; font-size: 20px; padding: 10px; border-radius: 8px; transition: background 0.3s ease; }
+        .notifications:hover { background: rgba(255, 255, 255, 0.1); }
+        .notification-badge { position: absolute; top: 5px; right: 5px; background: #ff4757; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .user-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 15px; border-radius: 25px; transition: background 0.3s ease; }
+        .user-profile:hover { background: rgba(255, 255, 255, 0.1); }
+        .user-avatar { width: 40px; height: 40px; background: linear-gradient(45deg, #ff6b6b, #feca57); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+        .user-info h3 { font-size: 14px; font-weight: 600; }
+        .user-info p { font-size: 12px; opacity: 0.8; }
+        .logout-btn { background: rgba(255, 71, 87, 0.2); border: 1px solid rgba(255, 71, 87, 0.3); color: #ff4757; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; font-size: 14px; font-weight: 600; }
+        .logout-btn:hover { background: rgba(255, 71, 87, 0.3); transform: translateY(-2px); }
+        .main-container { display: flex; min-height: calc(100vh - 80px); }
+        .sidebar { width: 280px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-right: 1px solid rgba(255, 255, 255, 0.2); padding: 2rem 0; transition: transform 0.3s ease; }
+        .nav-menu { list-style: none; }
+        .nav-item { margin: 5px 0; }
+        .nav-link { display: flex; align-items: center; gap: 15px; padding: 15px 30px; color: white; text-decoration: none; transition: all 0.3s ease; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { background: rgba(255, 255, 255, 0.1); border-left-color: #feca57; }
+        .nav-link i { font-size: 18px; width: 20px; }
+        .mobile-menu-btn { display: none; background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .page-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        /* Filters */
+        .history-filters {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            background: rgba(0,0,0,0.1);
+            padding: 8px;
+            border-radius: 12px;
+        }
+        
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn.active {
+            background: #feca57;
+            color: #574b90;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .search-container {
+            position: relative;
+            min-width: 300px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .search-container i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.7;
+        }
+
+        /* Booking List */
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .booking-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            transition: all 0.3s ease;
+        }
+        
+        .booking-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .booking-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .booking-details {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .booking-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .booking-time {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .booking-status-section {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            min-width: 200px;
+            gap: 15px;
+        }
+
+        .status-badge {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 110px;
+        }
+        
+        .status-approved { background: rgba(46, 213, 115, 0.2); color: #2ed573; }
+        .status-pending { background: rgba(255, 159, 67, 0.2); color: #ff9f43; }
+        .status-rejected { background: rgba(255, 71, 87, 0.2); color: #ff4757; }
+        .status-completed { background: rgba(255, 255, 255, 0.2); color: rgba(255, 255, 255, 0.8); }
+        
+        .booking-actions .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 8px;
+        }
+        
+        .btn-danger { background: rgba(255, 71, 87, 0.2); color: #ff4757; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.2); color: white; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 4rem 2rem; opacity: 0.8; }
+        .empty-icon { font-size: 64px; margin-bottom: 20px; opacity: 0.5; }
+        .empty-title { font-size: 24px; font-weight: 600; margin-bottom: 10px; }
+        
+        @media (max-width: 768px) {
+            .content { padding: 1rem; }
+            .mobile-menu-btn { display: block; }
+            .sidebar { transform: translateX(-100%); position: fixed; height: 100%; z-index: 90; }
+            .sidebar.active { transform: translateX(0); }
+            .user-info { display: none; }
+            .history-filters { flex-direction: column; }
+            .booking-item { flex-direction: column; align-items: flex-start; }
+            .booking-status-section { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo-section"><button class="mobile-menu-btn" id="mobileMenuBtn"><i class="fas fa-bars"></i></button><div class="logo-icon"><i class="fas fa-university"></i></div><div class="logo-text"><h1>Faculty Management</h1><p>Resource Management System</p></div></div>
+        <div class="user-section"><div class="notifications"><i class="fas fa-bell"></i><span class="notification-badge" id="notificationCount">3</span></div><div class="user-profile"><div class="user-avatar" id="userAvatar">JS</div><div class="user-info"><h3 id="userName">John Student</h3><p id="userRole">Student</p></div></div><button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+    </div>
+
+    <div class="main-container">
+        <nav class="sidebar" id="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                <li class="nav-item"><a href="profile.html" class="nav-link"><i class="fas fa-user"></i><span>Profile</span></a></li>
+                <li class="nav-item"><a href="catalog.html" class="nav-link"><i class="fas fa-search"></i><span>Browse Resources</span></a></li>
+                <li class="nav-item"><a href="room-booking.html" class="nav-link"><i class="fas fa-door-open"></i><span>Book Room</span></a></li>
+                <li class="nav-item"><a href="equipment-booking.html" class="nav-link"><i class="fas fa-tools"></i><span>Book Equipment</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-history"></i><span>My Bookings</span></a></li>
+                <li class="nav-item"><a href="notifications.html" class="nav-link"><i class="fas fa-bell"></i><span>Notifications</span></a></li>
+            </ul>
+        </nav>
+
+        <main class="content">
+            <div class="page-header">
+                <h1 class="page-title">My Bookings</h1>
+                <p>Review your active, pending, and past resource reservations.</p>
+            </div>
+
+            <div class="history-filters">
+                <div class="filter-tabs" id="filter-tabs">
+                    <button class="tab-btn active" data-filter="all">All</button>
+                    <button class="tab-btn" data-filter="approved">Approved & Active</button>
+                    <button class="tab-btn" data-filter="pending">Pending</button>
+                    <button class="tab-btn" data-filter="history">History</button>
+                </div>
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by resource name...">
+                </div>
+            </div>
+
+            <div class="booking-list" id="booking-list-container">
+                <!-- Bookings will be dynamically inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- DATA ---
+        let currentUser = {};
+        let currentFilter = 'all';
+
+        const sampleBookings = [
+            { id: 1, resourceName: 'Meeting Room A', type: 'room', date: '2025-08-05', time: '10:00 - 11:30', status: 'Approved' },
+            { id: 2, resourceName: '3D Printer (Ultimaker S5)', type: 'equipment', date: '2025-08-03 to 2025-08-07', time: null, status: 'Pending' },
+            { id: 3, resourceName: 'Robotic Arm Kit', type: 'equipment', date: '2025-07-20 to 2025-07-25', time: null, status: 'Completed' },
+            { id: 4, name: 'Computer Lab 1', type: 'room', date: '2025-07-28', time: '14:00 - 16:00', status: 'Approved' },
+            { id: 5, resourceName: 'High-Performance Server', type: 'equipment', date: '2025-08-10 to 2025-08-15', time: null, status: 'Pending' },
+            { id: 6, resourceName: 'Small Group Room', type: 'room', date: '2025-07-15', time: '09:00 - 12:00', status: 'Rejected' },
+            { id: 7, resourceName: 'VR Headset (Quest 3)', type: 'equipment', date: '2025-06-01 to 2025-06-10', time: null, status: 'Completed' },
+        ];
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserData();
+            initializeMobileMenu();
+            setupEventListeners();
+            filterAndRenderBookings(); // Initial render
+        });
+
+        function loadUserData() {
+            currentUser = window.currentUser || { name: 'John Student', role: 'Student' };
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userRole').textContent = currentUser.role;
+            const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            document.getElementById('userAvatar').textContent = initials;
+        }
+
+        function initializeMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+            mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('active'));
+        }
+
+        function setupEventListeners() {
+            document.getElementById('filter-tabs').addEventListener('click', (event) => {
+                if (event.target.tagName === 'BUTTON') {
+                    currentFilter = event.target.dataset.filter;
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    event.target.classList.add('active');
+                    filterAndRenderBookings();
+                }
+            });
+            document.getElementById('searchInput').addEventListener('input', filterAndRenderBookings);
+        }
+
+        // --- BOOKING LOGIC ---
+        function filterAndRenderBookings() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const now = new Date();
+
+            let filteredBookings = sampleBookings.filter(booking => {
+                // Search filter
+                if (searchTerm && !booking.resourceName.toLowerCase().includes(searchTerm)) {
+                    return false;
+                }
+                
+                // Status filter
+                const bookingDate = new Date(booking.date.split(' to ')[0]); // Use start date for ranges
+                const isPast = bookingDate < now;
+                
+                switch (currentFilter) {
+                    case 'approved':
+                        return booking.status === 'Approved' && !isPast;
+                    case 'pending':
+                        return booking.status === 'Pending' && !isPast;
+                    case 'history':
+                        return booking.status === 'Completed' || booking.status === 'Rejected' || (booking.status === 'Approved' && isPast);
+                    case 'all':
+                    default:
+                        return true;
+                }
+            });
+
+            renderBookingList(filteredBookings);
+        }
+
+        function renderBookingList(bookings) {
+            const container = document.getElementById('booking-list-container');
+            container.innerHTML = '';
+
+            if (bookings.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fas fa-box-open empty-icon"></i><h2 class="empty-title">No Bookings Found</h2><p>No bookings match the current filter.</p></div>`;
+                return;
+            }
+
+            bookings.forEach(booking => {
+                const isPast = new Date(booking.date.split(' to ')[0]) < new Date();
+                const canCancel = (booking.status === 'Approved' || booking.status === 'Pending') && !isPast;
+
+                const card = document.createElement('div');
+                card.className = 'booking-item';
+                card.innerHTML = `
+                    <div class="booking-icon">
+                        <i class="fas ${booking.type === 'room' ? 'fa-door-open' : 'fa-tools'}"></i>
+                    </div>
+                    <div class="booking-details">
+                        <h3 class="booking-title">${booking.resourceName}</h3>
+                        <p class="booking-time">${booking.time ? `${booking.date} at ${booking.time}` : `From ${booking.date}`}</p>
+                    </div>
+                    <div class="booking-status-section">
+                        <span class="status-badge status-${booking.status.toLowerCase()}">${booking.status}</span>
+                        <div class="booking-actions">
+                            ${canCancel ? `<button class="btn btn-danger" onclick="cancelBooking(${booking.id})">Cancel</button>` : ''}
+                            <button class="btn btn-secondary" onclick="viewDetails(${booking.id})">Details</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- ACTION HANDLERS ---
+        function cancelBooking(id) {
+            if (confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
+                // In a real app, this would be an API call. For now, we'll just simulate it.
+                const booking = sampleBookings.find(b => b.id === id);
+                if (booking) {
+                    booking.status = 'Rejected'; // Or 'Cancelled'
+                    filterAndRenderBookings(); // Re-render the list
+                    alert(`Booking for "${booking.resourceName}" has been cancelled.`);
+                }
+            }
+        }
+
+        function viewDetails(id) {
+            const booking = sampleBookings.find(b => b.id === id);
+            alert(`Showing details for booking #${id}:\nResource: ${booking.resourceName}\nStatus: ${booking.status}\nDate: ${booking.date}`);
+        }
+
+        // --- UTILITY ---
+        function logout() { if (confirm('Are you sure you want to logout?')) { alert('Logging out...'); } }
+    </script>
+</body>
+</html>
