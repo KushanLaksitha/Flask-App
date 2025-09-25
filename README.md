@@ -31,6 +31,7 @@ A comprehensive web-based system for managing faculty rooms, equipment, laborato
 ## 📸 Screenshots
 
 ### Dashboard
+![img_alt](https://github.com/KushanLaksitha/Flask-App/blob/main/screenshot/dashboard.png?raw=true)
 
 ### Resource List
 
