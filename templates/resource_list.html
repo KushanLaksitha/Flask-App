@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}All Resources - Faculty Resource Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>
+                <i class="fas fa-list me-2 text-primary"></i>All Resources
+            </h2>
+            <p class="text-muted mb-0">Browse and manage all rooms, labs, halls, and equipment</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{{ url_for('resource_create') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add New Resource
+            </a>
+        </div>
+    </div>
+
+    <!-- Search and Filter Form -->
+    <div class="search-form mb-4">
+        <form method="GET" action="{{ url_for('resource_list') }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label for="search" class="form-label">
+                        <i class="fas fa-search me-1"></i>Search Resources
+                    </label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search }}" placeholder="Search by name, description, or location...">
+                </div>
+                <div class="col-md-2">
+                    <label for="type" class="form-label">
+                        <i class="fas fa-filter me-1"></i>Type
+                    </label>
+                    <select class="form-select" id="type" name="type">
+                        <option value="">All Types</option>
+                        {% for rtype in resource_types %}
+                            <option value="{{ rtype }}" {{ 'selected' if rtype == selected_type else '' }}>
+                                {{ rtype.title() }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="status" class="form-label">
+                        <i class="fas fa-circle me-1"></i>Status
+                    </label>
+                    <select class="form-select" id="status" name="status">
+                        <option value="">All Status</option>
+                        {% for stat in statuses %}
+                            <option value="{{ stat }}" {{ 'selected' if stat == selected_status else '' }}>
+                                {{ stat.title() }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-fill">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                        {% if search or selected_type or selected_status %}
+                        <a href="{{ url_for('resource_list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <p class="mb-0">
+                <strong>{{ resources|length }}</strong> resource(s) found
+                {% if search %}
+                    for "<strong>{{ search }}</strong>"
+                {% endif %}
+                {% if selected_type %}
+                    in <span class="badge bg-info">{{ selected_type.title() }}</span>
+                {% endif %}
+                {% if selected_status %}
+                    with status <span class="badge status-{{ selected_status }}">{{ selected_status.title() }}</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="btn-group btn-group-sm" role="group">
+                <input type="radio" class="btn-check" name="view" id="card-view" autocomplete="off" checked>
+                <label class="btn btn-outline-secondary" for="card-view">
+                    <i class="fas fa-th-large"></i> Cards
+                </label>
+                <input type="radio" class="btn-check" name="view" id="table-view" autocomplete="off">
+                <label class="btn btn-outline-secondary" for="table-view">
+                    <i class="fas fa-list"></i> Table
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resources Display -->
+    {% if resources %}
+        <!-- Card View -->
+        <div id="card-view-container" class="row">
+            {% for resource in resources %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="{{ resource.type_icon }} text-muted me-2"></i>
+                            <span class="fw-bold">{{ resource.name }}</span>
+                        </div>
+                        <span class="badge status-{{ resource.status }}">
+                            {{ resource.status.title() }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">
+                                <i class="fas fa-tag me-1"></i>{{ resource.resource_type.title() }}
+                            </small>
+                            {% if resource.capacity %}
+                            <small class="text-muted ms-3">
+                                <i class="fas fa-users me-1"></i>{{ resource.capacity }}
+                            </small>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted mb-2">
+                            <i class="fas fa-map-marker-alt me-1"></i>{{ resource.location }}
+                        </p>
+                        {% if resource.description %}
+                        <p class="card-text">
+                            {{ resource.description[:100] }}{% if resource.description|length > 100 %}...{% endif %}
+                        </p>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                {% if resource.created_at %}
+                                    {{ resource.created_at.strftime('%b %d, %Y') }}
+                                {% endif %}
+                            </small>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('resource_detail', id=resource.id) }}" class="btn btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('resource_edit', id=resource.id) }}" class="btn btn-outline-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('resource_delete', id=resource.id) }}" class="btn btn-outline-danger" 
+                                   onclick="return confirmDelete('{{ resource.name }}')">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Table View (Initially Hidden) -->
+        <div id="table-view-container" class="d-none">
+            <div class="card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Location</th>
+                                    <th>Capacity</th>
+                                    <th>Created</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for resource in resources %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="{{ resource.type_icon }} text-muted me-2"></i>
+                                            <div>
+                                                <div class="fw-semibold">{{ resource.name }}</div>
+                                                {% if resource.description %}
+                                                <small class="text-muted">{{ resource.description[:50] }}{% if resource.description|length > 50 %}...{% endif %}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ resource.resource_type.title() }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge status-{{ resource.status }}">
+                                            {{ resource.status.title() }}
+                                        </span>
+                                    </td>
+                                    <td class="text-muted">{{ resource.location }}</td>
+                                    <td>
+                                        {% if resource.capacity %}
+                                            <i class="fas fa-users me-1 text-muted"></i>{{ resource.capacity }}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted">
+                                        {% if resource.created_at %}
+                                            {{ resource.created_at.strftime('%b %d, %Y') }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('resource_detail', id=resource.id) }}" 
+                                               class="btn btn-outline-primary" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('resource_edit', id=resource.id) }}" 
+                                               class="btn btn-outline-warning" title="Edit Resource">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{{ url_for('resource_delete', id=resource.id) }}" 
+                                               class="btn btn-outline-danger" title="Delete Resource"
+                                               onclick="return confirmDelete('{{ resource.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- No Resources Found -->
+        <div class="text-center py-5">
+            <div class="card">
+                <div class="card-body py-5">
+                    <i class="fas fa-search text-muted mb-3" style="font-size: 4rem;"></i>
+                    <h4 class="mb-3">No Resources Found</h4>
+                    <p class="text-muted mb-4">
+                        {% if search or selected_type or selected_status %}
+                            No resources match your search criteria. Try adjusting your filters or search terms.
+                        {% else %}
+                            There are no resources in the system yet. Add your first resource to get started!
+                        {% endif %}
+                    </p>
+                    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                        {% if search or selected_type or selected_status %}
+                            <a href="{{ url_for('resource_list') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-times me-2"></i>Clear Filters
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('resource_create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add Resource
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Quick Stats (if resources exist) -->
+    {% if resources %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Quick Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 mb-3">
+                            <div class="h4 text-success mb-1">{{ resources | selectattr('status', 'equalto', 'available') | list | length }}</div>
+                            <small class="text-muted">Available</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="h4 text-warning mb-1">{{ resources | selectattr('status', 'equalto', 'booked') | list | length }}</div>
+                            <small class="text-muted">Booked</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="h4 text-danger mb-1">{{ resources | selectattr('status', 'equalto', 'maintenance') | list | length }}</div>
+                            <small class="text-muted">Maintenance</small>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="h4 text-info mb-1">{{ resources | selectattr('resource_type', 'equalto', 'equipment') | list | length }}</div>
+                            <small class="text-muted">Equipment</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Toggle between card and table view
+document.addEventListener('DOMContentLoaded', function() {
+    const cardViewRadio = document.getElementById('card-view');
+    const tableViewRadio = document.getElementById('table-view');
+    const cardContainer = document.getElementById('card-view-container');
+    const tableContainer = document.getElementById('table-view-container');
+    
+    cardViewRadio.addEventListener('change', function() {
+        if (this.checked) {
+            cardContainer.classList.remove('d-none');
+            tableContainer.classList.add('d-none');
+        }
+    });
+    
+    tableViewRadio.addEventListener('change', function() {
+        if (this.checked) {
+            tableContainer.classList.remove('d-none');
+            cardContainer.classList.add('d-none');
+        }
+    });
+    
+    // Auto-submit search form on filter change
+    const typeSelect = document.getElementById('type');
+    const statusSelect = document.getElementById('status');
+    
+    function autoSubmit() {
+        // Small delay to allow user to make multiple selections
+        setTimeout(() => {
+            document.querySelector('form').submit();
+        }, 100);
+    }
+    
+    typeSelect.addEventListener('change', autoSubmit);
+    statusSelect.addEventListener('change', autoSubmit);
+    
+    // Enhanced search with suggestions
+    const searchInput = document.getElementById('search');
+    searchInput.addEventListener('input', function() {
+        // Add visual feedback
+        if (this.value.length > 0) {
+            this.classList.add('border-primary');
+        } else {
+            this.classList.remove('border-primary');
+        }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + K to focus search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            searchInput.focus();
+        }
+        
+        // Escape to clear search
+        if (e.key === 'Escape' && document.activeElement === searchInput) {
+            searchInput.value = '';
+            searchInput.form.submit();
+        }
+    });
+});
+
+// Bulk actions (future enhancement)
+function selectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('input[name="selected_resources"]');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const selected = document.querySelectorAll('input[name="selected_resources"]:checked').length;
+    const bulkActions = document.getElementById('bulk-actions');
+    if (bulkActions) {
+        bulkActions.style.display = selected > 0 ? 'block' : 'none';
+    }
+}
+</script>
+{% endblock %}

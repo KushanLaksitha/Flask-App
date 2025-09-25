@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Resource - Faculty Resource Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('resource_list') }}">Resources</a></li>
+                    {% if action == 'Edit' and resource %}
+                    <li class="breadcrumb-item"><a href="{{ url_for('resource_detail', id=resource.id) }}">{{ resource.name }}</a></li>
+                    {% endif %}
+                    <li class="breadcrumb-item active">{{ action }} Resource</li>
+                </ol>
+            </nav>
+            <h2>
+                <i class="fas fa-{{ 'edit' if action == 'Edit' else 'plus' }} me-2 text-primary"></i>
+                {{ action }} Resource
+            </h2>
+            <p class="text-muted mb-0">
+                {% if action == 'Edit' %}
+                    Update the details of this resource
+                {% else %}
+                    Add a new room, lab, hall, or equipment to the system
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            {% if action == 'Edit' and resource %}
+            <a href="{{ url_for('resource_detail', id=resource.id) }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-eye me-1"></i>View Details
+            </a>
+            {% endif %}
+            <a href="{{ url_for('resource_list') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-form me-2"></i>Resource Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Basic Information
+                                </h6>
+                            </div>
+                            
+                            <!-- Resource Name -->
+                            <div class="col-md-8 mb-3">
+                                <label for="name" class="form-label">
+                                    Resource Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" required
+                                       value="{{ form_data.name if form_data else (resource.name if resource else '') }}"
+                                       placeholder="e.g., Computer Lab A, Robotic Arm Unit 1">
+                                <div class="form-text">Enter a unique, descriptive name for the resource</div>
+                            </div>
+                            
+                            <!-- Resource Type -->
+                            <div class="col-md-4 mb-3">
+                                <label for="resource_type" class="form-label">
+                                    Resource Type <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="resource_type" name="resource_type" required>
+                                    <option value="">Select type...</option>
+                                    {% for value, label in [('room', 'Room'), ('lab', 'Laboratory'), ('hall', 'Hall'), ('equipment', 'Equipment')] %}
+                                        <option value="{{ value }}" 
+                                                {{ 'selected' if (form_data and form_data.resource_type == value) or (resource and resource.resource_type == value) else '' }}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Description -->
+                            <div class="col-12 mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="3" 
+                                          placeholder="Describe the resource, its features, and any special requirements...">{{ form_data.description if form_data else (resource.description if resource else '') }}</textarea>
+                                <div class="form-text">Optional: Provide detailed information about this resource</div>
+                            </div>
+                        </div>
+
+                        <!-- Location and Capacity -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Location & Capacity
+                                </h6>
+                            </div>
+                            
+                            <!-- Location -->
+                            <div class="col-md-8 mb-3">
+                                <label for="location" class="form-label">
+                                    Location <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="location" name="location" required
+                                       value="{{ form_data.location if form_data else (resource.location if resource else '') }}"
+                                       placeholder="e.g., Engineering Building, Floor 3, Room 301">
+                                <div class="form-text">Building name, floor, and room number</div>
+                            </div>
+                            
+                            <!-- Capacity -->
+                            <div class="col-md-4 mb-3">
+                                <label for="capacity" class="form-label">Capacity</label>
+                                <input type="number" class="form-control" id="capacity" name="capacity" min="0" max="1000"
+                                       value="{{ form_data.capacity if form_data else (resource.capacity if resource else '') }}"
+                                       placeholder="e.g., 30">
+                                <div class="form-text">
+                                    <small id="capacity-help">
+                                        Seating capacity for rooms, usage limit for equipment
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status and Technical Info -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-cog me-2"></i>Status & Technical Information
+                                </h6>
+                            </div>
+                            
+                            <!-- Status -->
+                            <div class="col-md-4 mb-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    {% for value, label in [('available', 'Available'), ('maintenance', 'Under Maintenance'), ('booked', 'Booked/Occupied')] %}
+                                        <option value="{{ value }}" 
+                                                {{ 'selected' if (form_data and form_data.status == value) or (resource and resource.status == value) or (not form_data and not resource and value == 'available') else '' }}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <!-- Specifications -->
+                            <div class="col-12 mb-3">
+                                <label for="specifications" class="form-label">Technical Specifications</label>
+                                <textarea class="form-control" id="specifications" name="specifications" rows="3"
+                                          placeholder="Technical details, software installed, hardware specs, etc...">{{ form_data.specifications if form_data else (resource.specifications if resource else '') }}</textarea>
+                                <div class="form-text">Optional: Technical details and specifications</div>
+                            </div>
+                            
+                            <!-- Maintenance Notes -->
+                            <div class="col-12 mb-3" id="maintenance-notes-section" style="display: none;">
+                                <label for="maintenance_notes" class="form-label">Maintenance Notes</label>
+                                <textarea class="form-control" id="maintenance_notes" name="maintenance_notes" rows="2"
+                                          placeholder="Maintenance information or special notes...">{{ form_data.maintenance_notes if form_data else (resource.maintenance_notes if resource else '') }}</textarea>
+                                <div class="form-text">Notes about maintenance schedule or issues</div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <hr class="mb-4">
+                                <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
+                                    <a href="{{ url_for('resource_list') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-times me-1"></i>Cancel
+                                    </a>
+                                    <button type="submit" class="btn btn-primary" onclick="showLoading(this)">
+                                        <i class="fas fa-save me-1"></i>
+                                        {{ 'Update Resource' if action == 'Edit' else 'Create Resource' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Help Panel -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Tips & Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">Resource Types</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-door-open text-muted me-2"></i><strong>Room:</strong> Meeting rooms, offices</li>
+                            <li><i class="fas fa-flask text-muted me-2"></i><strong>Lab:</strong> Research laboratories</li>
+                            <li><i class="fas fa-building text-muted me-2"></i><strong>Hall:</strong> Large venues, auditoriums</li>
+                            <li><i class="fas fa-cogs text-muted me-2"></i><strong>Equipment:</strong> Specialized tools, machines</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-success">Best Practices</h6>
+                        <ul class="list-unstyled small">
+                            <li><i class="fas fa-check text-success me-2"></i>Use descriptive names</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Include building and room numbers</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Specify technical requirements</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Update status regularly</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-info py-2">
+                        <small>
+                            <i class="fas fa-info-circle me-1"></i>
+                            <strong>Required fields</strong> are marked with <span class="text-danger">*</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Preview Card -->
+            <div class="card mt-3" id="preview-card" style="display: none;">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Preview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="mb-1" id="preview-name">Resource Name</h6>
+                        <span class="badge" id="preview-status">Available</span>
+                    </div>
+                    <p class="text-muted small mb-2" id="preview-location">
+                        <i class="fas fa-map-marker-alt me-1"></i>Location
+                    </p>
+                    <p class="small mb-2" id="preview-description">Description</p>
+                    <small class="text-muted" id="preview-capacity"></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.getElementById('status');
+    const maintenanceSection = document.getElementById('maintenance-notes-section');
+    const resourceTypeSelect = document.getElementById('resource_type');
+    const capacityHelp = document.getElementById('capacity-help');
+    
+    // Show/hide maintenance notes based on status
+    function toggleMaintenanceNotes() {
+        if (statusSelect.value === 'maintenance') {
+            maintenanceSection.style.display = 'block';
+        } else {
+            maintenanceSection.style.display = 'none';
+        }
+    }
+    
+    // Update capacity help text based on resource type
+    function updateCapacityHelp() {
+        const type = resourceTypeSelect.value;
+        let helpText = 'Seating capacity for rooms, usage limit for equipment';
+        
+        switch(type) {
+            case 'room':
+            case 'hall':
+                helpText = 'Number of people that can be seated';
+                break;
+            case 'lab':
+                helpText = 'Number of workstations or maximum occupancy';
+                break;
+            case 'equipment':
+                helpText = 'Maximum number of simultaneous users';
+                break;
+        }
+        
+        capacityHelp.textContent = helpText;
+    }
+    
+    // Initialize
+    toggleMaintenanceNotes();
+    updateCapacityHelp();
+    
+    // Event listeners
+    statusSelect.addEventListener('change', toggleMaintenanceNotes);
+    resourceTypeSelect.addEventListener('change', updateCapacityHelp);
+    
+    // Live preview functionality
+    const previewCard = document.getElementById('preview-card');
+    const nameInput = document.getElementById('name');
+    const locationInput = document.getElementById('location');
+    const descriptionInput = document.getElementById('description');
+    const capacityInput = document.getElementById('capacity');
+    
+    function updatePreview() {
+        const name = nameInput.value || 'Resource Name';
+        const location = locationInput.value || 'Location';
+        const description = descriptionInput.value || 'No description provided';
+        const capacity = capacityInput.value;
+        const status = statusSelect.value || 'available';
+        
+        document.getElementById('preview-name').textContent = name;
+        document.getElementById('preview-location').innerHTML = `<i class="fas fa-map-marker-alt me-1"></i>${location}`;
+        document.getElementById('preview-description').textContent = description.length > 80 ? description.substring(0, 80) + '...' : description;
+        document.getElementById('preview-capacity').innerHTML = capacity ? `<i class="fas fa-users me-1"></i>${capacity}` : '';
+        
+        const statusBadge = document.getElementById('preview-status');
+        statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+        statusBadge.className = `badge status-${status}`;
+        
+        // Show preview if any field has content
+        if (name !== 'Resource Name' || location !== 'Location') {
+            previewCard.style.display = 'block';
+        } else {
+            previewCard.style.display = 'none';
+        }
+    }
+    
+    // Update preview on input
+    nameInput.addEventListener('input', updatePreview);
+    locationInput.addEventListener('input', updatePreview);
+    descriptionInput.addEventListener('input', updatePreview);
+    capacityInput.addEventListener('input', updatePreview);
+    statusSelect.addEventListener('change', updatePreview);
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const requiredFields = form.querySelectorAll('[required]');
+        let isValid = true;
+        
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
+            } else {
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            const firstInvalidField = form.querySelector('.is-invalid');
+            if (firstInvalidField) {
+                firstInvalidField.focus();
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+    
+    // Remove invalid class on input
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+        field.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Faculty Resource Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <div class="card stats-card h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <h1 class="card-title h2 mb-3">
+                        <i class="fas fa-building resource-icon"></i>
+                        Welcome to Faculty Resource Management
+                    </h1>
+                    <p class="card-text fs-5 mb-4">
+                        Efficiently manage and schedule rooms, labs, halls, and specialized equipment 
+                        for educational and research purposes.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('resource_list') }}" class="btn btn-light btn-lg">
+                            <i class="fas fa-list me-2"></i>Browse Resources
+                        </a>
+                        <a href="{{ url_for('resource_create') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-plus me-2"></i>Add Resource
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>System Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="h2 mb-1 text-primary">{{ stats.total }}</div>
+                            <small class="text-muted">Total Resources</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="h2 mb-1 text-success">{{ stats.available }}</div>
+                            <small class="text-muted">Available</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h2 mb-1 text-warning">{{ stats.booked }}</div>
+                            <small class="text-muted">Booked</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="h2 mb-1 text-danger">{{ stats.maintenance }}</div>
+                            <small class="text-muted">Maintenance</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h3 class="mb-4">
+                <i class="fas fa-bolt me-2 text-primary"></i>Quick Actions
+            </h3>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-search text-primary resource-icon"></i>
+                    <h5 class="card-title">Find Resources</h5>
+                    <p class="card-text">Search and filter available rooms and equipment</p>
+                    <a href="{{ url_for('resource_list') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-search me-1"></i>Search
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-flask text-info resource-icon"></i>
+                    <h5 class="card-title">View Labs</h5>
+                    <p class="card-text">Browse all laboratory facilities and equipment</p>
+                    <a href="{{ url_for('resource_list', type='lab') }}" class="btn btn-outline-info">
+                        <i class="fas fa-flask me-1"></i>View Labs
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-cogs text-warning resource-icon"></i>
+                    <h5 class="card-title">Equipment</h5>
+                    <p class="card-text">Access specialized research equipment</p>
+                    <a href="{{ url_for('resource_list', type='equipment') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-cogs me-1"></i>View Equipment
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-plus text-success resource-icon"></i>
+                    <h5 class="card-title">Add Resource</h5>
+                    <p class="card-text">Register new rooms or equipment</p>
+                    <a href="{{ url_for('resource_create') }}" class="btn btn-outline-success">
+                        <i class="fas fa-plus me-1"></i>Add New
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Resources -->
+    {% if recent_resources %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-clock me-2 text-primary"></i>Recently Added Resources
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for resource in recent_resources %}
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="card-title mb-1">
+                                            <i class="{{ resource.type_icon }} me-2 text-muted"></i>
+                                            {{ resource.name }}
+                                        </h6>
+                                        <span class="badge status-{{ resource.status }}">
+                                            {{ resource.status.title() }}
+                                        </span>
+                                    </div>
+                                    <p class="card-text text-muted small mb-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ resource.location }}
+                                    </p>
+                                    {% if resource.description %}
+                                    <p class="card-text small">
+                                        {{ resource.description[:80] }}{% if resource.description|length > 80 %}...{% endif %}
+                                    </p>
+                                    {% endif %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            {% if resource.capacity %}
+                                                <i class="fas fa-users me-1"></i>{{ resource.capacity }}
+                                            {% endif %}
+                                        </small>
+                                        <a href="{{ url_for('resource_detail', id=resource.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('resource_list') }}" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>View All Resources
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <i class="fas fa-database text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 mb-3">No Resources Found</h4>
+                    <p class="text-muted mb-4">
+                        It looks like there are no resources in the system yet. 
+                        Get started by adding your first resource!
+                    </p>
+                    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                        <a href="{{ url_for('resource_create') }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Add First Resource
+                        </a>
+                        <a href="#" onclick="seedDatabase()" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-seedling me-2"></i>Load Sample Data
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Feature Highlights -->
+    <div class="row mt-5">
+        <div class="col-12 mb-4">
+            <h3 class="text-center">
+                <i class="fas fa-star me-2 text-warning"></i>System Features
+            </h3>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-search text-white fa-2x"></i>
+                </div>
+                <h5>Advanced Search</h5>
+                <p class="text-muted">Find resources quickly with powerful search and filtering capabilities.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-cogs text-white fa-2x"></i>
+                </div>
+                <h5>Resource Management</h5>
+                <p class="text-muted">Efficiently manage rooms, labs, and specialized equipment in one place.</p>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="text-center">
+                <div class="bg-info rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                    <i class="fas fa-chart-line text-white fa-2x"></i>
+                </div>
+                <h5>Usage Tracking</h5>
+                <p class="text-muted">Monitor resource availability and usage patterns for better planning.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function seedDatabase() {
+    if (confirm('This will load sample data into your database. Continue?')) {
+        // This would typically make an AJAX call to a seeding endpoint
+        alert('In a full implementation, this would load sample data. For now, please run: python seed.py');
+    }
+}
+</script>
+{% endblock %}
